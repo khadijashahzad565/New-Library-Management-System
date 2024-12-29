@@ -33,7 +33,7 @@ app.get('/', (req, res) => {
 
 // Login 
 app.get('/login', (req, res) => {
-    res.render('login');  // Render the login page
+    res.render('login', { message: ""});  // Render the login page
 });
 
 
@@ -45,8 +45,9 @@ app.post('/login', async (req, res) => {
         await signInWithEmailAndPassword(auth, email, password);
         res.redirect('/dashboard');  // Redirect to dashboard if login is successful
     } catch (error) {
-        res.send("Login failed! Please check your email and password.");  // Show error if login fails
-    }
+          // console.error("Login failed: ", error.message); 
+          res.render('login', { message: "Login failed! Please check your email and password." });  // Display error message
+        } 
 });
 
 // Signup 
@@ -63,7 +64,7 @@ app.post('/signup', async (req, res) => {
         await createUserWithEmailAndPassword(auth, email, password);
         res.redirect('/login'); 
     } catch (error) {
-        console.error("Error creating user: ", error.message); 
+        // console.error("Error creating user: ", error.message); 
         res.render('signup', { message: `Signup failed! Please try again` });  // Display error message
     }
 });
