@@ -51,7 +51,7 @@ app.post('/login', async (req, res) => {
 
 // Signup 
 app.get('/signup', (req, res) => {
-    res.render('signup');  // Render the signup page
+    res.render('signup', { message: "" });  // Render the signup page
 });
 
 
@@ -61,9 +61,10 @@ app.post('/signup', async (req, res) => {
     try {
        
         await createUserWithEmailAndPassword(auth, email, password);
-        res.send("Account created! You can now log in.");  // Notify that the account was created successfully
+        res.redirect('/login'); 
     } catch (error) {
-        res.send("Signup failed! Please try again.");  // Show error if signup fails
+        console.error("Error creating user: ", error.message); 
+        res.render('signup', { message: `Signup failed! Please try again` });  // Display error message
     }
 });
 
@@ -73,7 +74,7 @@ app.get('/dashboard', (req, res) => {
 });
 
 // Start Server
-const port = 7000;
+const port = 5000;
 app.listen(port, () => {
     console.log(`Server running on Port: ${port}`); 
 });
