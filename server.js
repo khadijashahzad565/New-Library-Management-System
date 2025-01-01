@@ -2,6 +2,7 @@ const express = require("express");
 const path = require("path");
 const { initializeApp } = require("firebase/app");
 const { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } = require("firebase/auth");
+const { getDatabase, ref, get }= require("firebase/database");
 
 const app = express();
 
@@ -19,6 +20,8 @@ const firebaseConfig = {
 // Initialize Firebase
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
+const database = getDatabase(firebaseApp);
+
 
 // Middleware
 app.set('views', path.join(__dirname, 'views')); 
@@ -70,12 +73,23 @@ app.post('/signup', async (req, res) => {
 });
 
 // Dashboard
-app.get('/dashboard', (req, res) => {
-    res.render('dashboard', { user: "Guest" });  // Render the dashboard page
-});
+app.get("/dashboard", async (req, res) => {
+    const bookRef = ref(database, "Books");
+    try {
+      const snapshot = await get(bookRef);
+      const books = snapshot.exists() ? Object.values(snapshot.val()) : [];
+      res.render("dashboard", { books: books, error: null });
+    } catch (error) {
+      console.error("Dashboard fetch error:", error.message);
+      res.render("dashboard", {
+        books: [],
+        error: "Failed to store book data. Please try again.",
+      });
+    }
+  });
 
 // Start Server
-const port = 5000;
+const port = 7000;
 app.listen(port, () => {
     console.log(`Server running on Port: ${port}`); 
 });
