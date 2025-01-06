@@ -46,7 +46,7 @@ app.post('/login', async (req, res) => {
     try {
         // Try to sign in with the provided email and password
         await signInWithEmailAndPassword(auth, email, password);
-        res.redirect('/dashboard');  // Redirect to dashboard if login is successful
+        res.redirect('/data');  // Redirect to dashboard if login is successful
     } catch (error) {
           // console.error("Login failed: ", error.message); 
           res.render('login', { message: "Login failed! Please check your email and password." });  // Display error message
@@ -88,8 +88,31 @@ app.get("/dashboard", async (req, res) => {
     }
   });
 
+
+// Data Page
+app.get('/data', async (req, res) => {
+    const bookRef = ref(database, "Books");
+    try {
+        const snapshot = await get(bookRef);
+        const books = snapshot.exists() ? Object.values(snapshot.val()) : [];
+        res.render("data", { books: books, error: null });
+    } catch (error) {
+        console.error("Data fetch error:", error.message);
+        res.render("data", { books: [], error: "Failed to load book data. Please try again." });
+    }
+});
+
+// Logout Route
+app.get('/logout', (req, res) => {
+    auth.signOut()
+        .then(() => {
+            res.redirect('/signup');
+        }); 
+});
+
+
 // Start Server
-const port = 7000;
+const port = 9000;
 app.listen(port, () => {
     console.log(`Server running on Port: ${port}`); 
 });
