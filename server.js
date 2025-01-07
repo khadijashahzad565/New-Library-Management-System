@@ -102,6 +102,54 @@ app.get('/data', async (req, res) => {
     }
 });
 
+app.get("/dashboard/add", (req, res) => {
+    res.render("dashboard", { book: null });
+});
+
+app.post("/dashboard/add", async (req, res) => {
+    const { name, isbn, genre, author } = req.body;
+    try {
+        const newBookRef = push(ref(database, "Books"));
+        await set(newBookRef, { name, isbn, genre, author });
+        res.redirect("/data");
+    } catch (error) {
+        console.error("Add book error:", error.message);
+        res.status(500).send("Failed to add book. Please try again.");
+    }
+});
+
+// Edit Book Route
+app.get("/dashboard/edit/:id", async (req, res) => {
+    const bookId = req.params.id;
+    const bookRef = ref(database, `Books/${bookId}`);
+    try {
+        const snapshot = await get(bookRef);
+        const book = snapshot.val();
+        if (book) {
+            res.render("dashboard", { book: { id: bookId, ...book } });
+        } else {
+            res.redirect("/data");
+        }
+    } catch (error) {
+        console.error("Edit fetch error:", error.message);
+        res.redirect("/data");
+    }
+});
+
+// Update Book Route
+app.post("/update-book/:id", async (req, res) => {
+    const bookId = req.params.id;
+    const { name, isbn, genre, author } = req.body;
+    const bookRef = ref(database, `Books/${bookId}`);
+    try {
+        await update(bookRef, { name, isbn, genre, author });
+        res.redirect("/data");
+    } catch (error) {
+        console.error("Update book error:", error.message);
+        res.status(500).send("Failed to update book. Please try again.");
+    }
+});
+
 // Logout Route
 app.get('/logout', (req, res) => {
     auth.signOut()
@@ -112,7 +160,7 @@ app.get('/logout', (req, res) => {
 
 
 // Start Server
-const port = 9000;
+const port = 3000;
 app.listen(port, () => {
     console.log(`Server running on Port: ${port}`); 
 });
