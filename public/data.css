@@ -40,6 +40,18 @@ h1 {
     background-color: #57585a;
 }
 
+button {
+    background-color: #000000;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.btn:hover {
+    background-color: #57585a;
+}
 
 
 table {

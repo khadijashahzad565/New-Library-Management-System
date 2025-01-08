@@ -3,19 +3,16 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebas
 import { getDatabase, ref, set, get, update, remove, child } 
 from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
 
-// Firebase Configuration
 const firebaseConfig = {
     apiKey: "AIzaSyAVp5CtsglGVw5Zjdbbf_dJZpGdgoTkPSI",
     authDomain: "authentication-12298.firebaseapp.com",
-    databaseURL: "https://authentication-12298-default-rtdb.firebaseio.com",
     projectId: "authentication-12298",
     storageBucket: "authentication-12298.firebasestorage.app",
     messagingSenderId: "414945602397",
     appId: "1:414945602397:web:992285ca199707cd1956b4",
     measurementId: "G-F2YC2XWHBW"
-  };
+};
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase();
 
