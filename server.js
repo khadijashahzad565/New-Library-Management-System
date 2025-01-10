@@ -53,6 +53,40 @@ app.post('/login', async (req, res) => {
         } 
 });
 
+
+app.post('/send-otp', async (req, res) => {
+    const { phoneNumber } = req.body;
+    try {
+       
+        const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber);
+        req.session.confirmationResult = confirmationResult;
+        res.status(200).send('OTP sent successfully!');
+    } catch (error) {
+        console.log('Error sending OTP:', error.message);
+        res.status(400).send('Error sending OTP: ' + error.message);
+    }
+});
+
+
+app.post('/verify-otp', async (req, res) => {
+    const { otp } = req.body;
+    const confirmationResult = req.session.confirmationResult;
+    try {
+        
+        if (!confirmationResult) {
+            return res.status(400).send('Confirmation result not found. OTP may not have been sent.');
+        }
+
+        const userCredential = await confirmationResult.confirm(otp);
+        req.session.user = userCredential.user;
+        res.status(200).send('OTP verified successfully!');
+    } catch (error) {
+        console.log('OTP verification failed:', error.message);
+        res.status(400).send('Invalid OTP! ' + error.message);
+    }
+});
+
+
 // Signup 
 app.get('/signup', (req, res) => {
     res.render('signup', { message: "" });  // Render the signup page

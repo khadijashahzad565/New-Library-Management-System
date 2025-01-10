@@ -14,8 +14,23 @@
         <input type="email" name="email" placeholder="Email" required />
         <input type="password" name="password" placeholder="Password" required />
         <button class="button">Login</button>
-    </form>
-    <p>Don't have an account? <a href="/signup">Sign up</a></p>
+        <div id="send-otp-container">
+            <p>Number Verification</p>
+            <form id="otp-form" onsubmit="sendOTP(event)">
+                <input type="text" id="phoneNumber" name="phoneNumber" placeholder="Enter your phone number" required />
+                <div id="verification-target"></div> 
+                <button type="submit">Send OTP</button>
+            </form>
+        </div>
+    
+        <div id="verify-otp-container" style="display: none;">
+            <h2>Enter OTP to Verify</h2>
+            <form id="verify-form" onsubmit="verifyOTP(event)">
+                <input type="text" id="otp" name="otp" placeholder="Enter OTP" required />
+                <div id="otp-status"></div> 
+                <button type="submit">Verify OTP</button>
+            </form>
+        </div>
     <% if (message) { %><p><%= message %></p><% } %>
     </div>
 </div>
