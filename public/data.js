@@ -58,25 +58,22 @@ window.editBook = function (key) {
   window.location.href = `/dashboard?id=${key}`;
 };
 
-// Delete Book (Admin Only)
+// Delete 
 window.deleteBook = function (key) {
-  if (isAdmin) {
-    if (confirm("Are you sure you want to delete this book?")) {
-      const bookRef = ref(db, `Books/${key}`);
-      remove(bookRef)
-        .then(() => {
+  if (confirm("Are you sure you want to delete this book?")) {
+  const bookRef = ref(db, `Books/${key}`);
+  remove(bookRef)
+      .then(() => {
           alert("Book deleted successfully.");
           console.log(`Book with key ${key} deleted.`);
-          displayBooks();  
-        })
-        .catch((error) => {
+          displayBooks(); 
+      })
+      .catch((error) => {
           console.error("Error deleting book:", error);
           alert("An error occurred. Please try again.");
-        });
-    }
-  } else {
-    alert("Only admin has access to delete books.");
+      });
   }
-};
+  };
+    
 
 window.onload = displayBooks;

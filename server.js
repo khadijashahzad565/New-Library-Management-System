@@ -29,7 +29,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 
 // Admin email (created manually in Firebase console)
-const adminEmail = "admin@example.com";
+const adminEmail = "aadmin@gmail.com";
 
 
 app.use((req, res, next) => {
@@ -127,7 +127,7 @@ app.get('/logout', (req, res) => {
     });
 });
 
-// Start Server
+
 const port = 9000;
 app.listen(port, () => {
     console.log(`Server running on Port: ${port}`);
