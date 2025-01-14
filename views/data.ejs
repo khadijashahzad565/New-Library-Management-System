@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Data</title>
+    <link rel="stylesheet" href="data.css">
+
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Book Data</h1>
+            <div>
+                <a href="/dashboard" class="btn">Add Book</a>
+                <a href="/logout" class="btn">Logout</a>
+            </div>
+        </header>
+
+        <div class="error" id="error-message" style="display:none;"></div>
+
+        <table id="book-table">
+            
+                <tr>
+                    <th>Book Name</th>
+                    <th>ISBN</th>
+                    <th>Genre</th>
+                    <th>Author</th>
+                    <th>Actions</th>
+                </tr>
+          
+            
+        </table>
+    </div>
+    <script type="module" src="data.js"></script>
+     
+</body>
+</html>
