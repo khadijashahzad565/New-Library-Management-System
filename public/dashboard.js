@@ -76,6 +76,7 @@ function deleteBook() {
     .catch((error) => alert("Error: " + error));
 }
 
+
 // Attach Functions to Buttons
 createBtn.addEventListener('click', createBook);
 readBtn.addEventListener('click', readBook);
