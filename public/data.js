@@ -59,19 +59,24 @@ window.editBook = function (key) {
 };
 
 // Delete 
-window.deleteBook = function (key) {
-  if (confirm("Are you sure you want to delete this book?")) {
-  const bookRef = ref(db, `Books/${key}`);
-  remove(bookRef)
-      .then(() => {
-          alert("Book deleted successfully.");
-          console.log(`Book with key ${key} deleted.`);
-          displayBooks(); 
-      })
-      .catch((error) => {
-          console.error("Error deleting book:", error);
-          alert("An error occurred. Please try again.");
-      });
+window.deleteBook = async function (key) {
+  try {
+    const isAdmin = await checkAdminStatus();
+    if (!isAdmin) {
+      alert("Only admin has access to delete books.");
+      return; 
+    }
+
+    if (confirm("Are you sure you want to delete this book?")) {
+      const bookRef = ref(db, `Books/${key}`);
+      await remove(bookRef); 
+      alert("Book deleted successfully.");
+      displayBooks(); 
+    }
+  } catch (error) {
+    // Unified error handling
+    console.error("An error occurred:", error);
+    alert("An error occurred. Please try again.");
   }
   };
     
