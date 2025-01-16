@@ -1,8 +1,8 @@
 const express = require("express");
 const path = require("path");
 const { initializeApp } = require("firebase/app");
-const { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } = require("firebase/auth");
-const { getDatabase, ref, get, push, set, update } = require("firebase/database");
+const { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendEmailVerification } = require("firebase/auth");
+const { getDatabase, ref, get } = require("firebase/database");
 require("dotenv").config();
 const app = express();
 
@@ -55,10 +55,11 @@ app.post('/signup', async (req, res) => {
     const { email, password } = req.body;  
 
     try {
-        await createUserWithEmailAndPassword(auth, email, password);
-        res.redirect('/login'); 
+ const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+ await sendEmailVerification(userCredential.user);
+        res.render('signup', { message: "Signup successful! Please check your email to verify your account." });
     } catch (error) {
-        res.render('signup', { message: `Signup failed! Please try again` });  // Display error message
+        res.render('signup', { message: `Signup failed! Please try again` });
     }
 });
 
@@ -72,23 +73,32 @@ app.post('/login', async (req, res) => {
 
     try {
        
-        await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
+        if (email !== process.env.ADMIN_EMAIL && !userCredential.user.emailVerified) {
+            res.send(`<script>
+                alert('Please verify your email before logging in.');
+                window.location.href = '/login'; 
+            </script>`);
+        } else {
         
         if (email === adminEmail) {
             res.redirect('/data'); 
         } else {
             res.redirect('/data');  
         }
+    }
     } catch (error) {
         console.error("Login failed: ", error.message);
-        res.render('login', { message: "Login failed! Please check your email and password." });  // Display error message
-    }
+        res.send(`<script>
+            alert('Login failed! Please check your email and password.');
+            window.location.href = '/login'; 
+        </script>`);    }
 });
 
 // Admin Dashboard Route
 app.get("/dashboard", async (req, res) => {
-    if (req.user && req.user.email === adminEmail) {
+    if (req.user && req.user.email === process.env.ADMIN_EMAIL) {
         const bookRef = ref(database, "Books");
         try {
             const snapshot = await get(bookRef);
@@ -108,6 +118,7 @@ app.get("/dashboard", async (req, res) => {
 
 // Member Dashboard Route
 app.get("/data", async (req, res) => {
+    if (req.user) {
     const bookRef = ref(database, "Books");
     try {
         const snapshot = await get(bookRef);
@@ -117,6 +128,9 @@ app.get("/data", async (req, res) => {
         console.error("Data fetch error:", error.message);
         res.render("data", { books: [], error: "Failed to load book data. Please try again." });
     }
+} else {
+    res.send('<script>alert("You must log in to access this page."); window.location.href = "/login";</script>');
+}
 });
 
 // Logout Route
