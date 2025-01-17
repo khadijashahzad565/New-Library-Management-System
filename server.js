@@ -1,7 +1,7 @@
 const express = require("express");
 const path = require("path");
 const { initializeApp } = require("firebase/app");
-const { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendEmailVerification } = require("firebase/auth");
+const { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendEmailVerification, sendPasswordResetEmail} = require("firebase/auth");
 const { getDatabase, ref, get } = require("firebase/database");
 require("dotenv").config();
 const app = express();
@@ -95,6 +95,25 @@ app.post('/login', async (req, res) => {
             window.location.href = '/login'; 
         </script>`);    }
 });
+
+// Forgot Password Route
+app.get('/forgot-password', (req, res) => {
+    res.render('forgot-password', { message: "" });
+});
+
+app.post('/forgot-password', async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        // Send password reset email
+        await sendPasswordResetEmail(auth, email);
+        res.render('forgot-password', { message: "Password reset email sent! Please check your inbox." });
+    } catch (error) {
+        console.error("Error sending password reset email:", error.message);
+        res.render('forgot-password', { message: "Failed to send reset email. " + error.message });
+    }
+});
+
 
 // Admin Dashboard Route
 app.get("/dashboard", async (req, res) => {
