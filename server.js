@@ -65,36 +65,41 @@ app.post('/signup', async (req, res) => {
 
 // Login
 app.get('/login', (req, res) => {
-    res.render('login', { message: "" });  // Render the login page
+    res.render('login', { message: "" });  // Render the login page with an empty message
 });
 
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     try {
-       
+        // Authenticate the user
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
+        // Check if the user is not an admin and their email is not verified
         if (email !== process.env.ADMIN_EMAIL && !userCredential.user.emailVerified) {
             res.send(`<script>
                 alert('Please verify your email before logging in.');
                 window.location.href = '/login'; 
             </script>`);
-        } else {
-        
-        if (email === adminEmail) {
-            res.redirect('/data'); 
-        } else {
-            res.redirect('/data');  
+            return; 
         }
-    }
+
+        // Redirect all successfully logged-in users to /my-account
+        res.redirect('/my-account');  
     } catch (error) {
         console.error("Login failed: ", error.message);
         res.send(`<script>
             alert('Login failed! Please check your email and password.');
             window.location.href = '/login'; 
-        </script>`);    }
+        </script>`);
+    }
 });
+
+// Define the /my-account route
+app.get('/my-account', (req, res) => {
+    res.render('my-account'); 
+ 
+})
 
 // Forgot Password Route
 app.get('/forgot-password', (req, res) => {
@@ -163,7 +168,7 @@ app.get('/logout', (req, res) => {
 });
 
 
-const port = 3000;
+const port = 7000;
 app.listen(port, () => {
     console.log(`Server running on Port: ${port}`);
 });
