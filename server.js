@@ -1,8 +1,8 @@
 const express = require("express");
 const path = require("path");
 const { initializeApp } = require("firebase/app");
-const { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendEmailVerification, sendPasswordResetEmail} = require("firebase/auth");
-const { getDatabase, ref, get } = require("firebase/database");
+const { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendEmailVerification, sendPasswordResetEmail } = require("firebase/auth");
+const { getDatabase, ref, get, update } = require("firebase/database");
 require("dotenv").config();
 const app = express();
 
@@ -16,8 +16,7 @@ const firebaseConfig = {
     messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
     appId: process.env.FIREBASE_APP_ID,
     measurementId: process.env.FIREBASE_MEASUREMENT_ID,
-  };
-  
+};
 
 // Initialize Firebase
 const firebaseApp = initializeApp(firebaseConfig);
@@ -30,9 +29,8 @@ app.set('view engine', 'ejs');
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 
-// Admin email (created manually in Firebase console)
+// Admin email
 const adminEmail = process.env.ADMIN_EMAIL;
-
 
 app.use((req, res, next) => {
     if (auth.currentUser) {
@@ -43,74 +41,62 @@ app.use((req, res, next) => {
 
 // Routes
 app.get('/', (req, res) => {
-    res.redirect('/login');  // Redirect to login page
+    res.redirect('/login');
 });
 
-// Signup
+
+/// Signup
 app.get('/signup', (req, res) => {
-    res.render('signup', { message: "" });  // Render the signup page
+    res.render('signup', { message: "" });
 });
 
 app.post('/signup', async (req, res) => {
-    const { email, password } = req.body;  
-
+    const { email, password, name, username } = req.body;
+  
     try {
- const userCredential = await createUserWithEmailAndPassword(auth, email, password);
- await sendEmailVerification(userCredential.user);
-        res.render('signup', { message: "Signup successful! Please check your email to verify your account." });
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const uid = userCredential.user.uid;
+  
+      const userRef = ref(database, 'users/' + uid);
+      set(userRef, { email,name,});
+  
+      await sendEmailVerification(userCredential.user);
+      res.render('signup', { message: "Signup successful! Please verify your email." });
     } catch (error) {
-        res.render('signup', { message: `Signup failed! Please try again` });
+      res.render('signup', { message: `Signup failed! ${error.message}` });
     }
-});
+  });
+
 
 // Login
 app.get('/login', (req, res) => {
-    res.render('login', { message: "" });  // Render the login page with an empty message
+    res.render('login', { message: "" });
 });
 
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
-
     try {
-        // Authenticate the user
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
-
-        // Check if the user is not an admin and their email is not verified
-        if (email !== process.env.ADMIN_EMAIL && !userCredential.user.emailVerified) {
-            res.send(`<script>
-                alert('Please verify your email before logging in.');
-                window.location.href = '/login'; 
-            </script>`);
-            return; 
+        if (email !== adminEmail && !userCredential.user.emailVerified) {
+            return res.send(`<script>alert('Please verify your email before logging in.'); window.location.href = '/login';</script>`);
         }
-
-        // Redirect all successfully logged-in users to /my-account
-        res.redirect('/my-account');  
+        res.redirect('/profile'); // Redirect to profile after login
     } catch (error) {
         console.error("Login failed: ", error.message);
-        res.send(`<script>
-            alert('Login failed! Please check your email and password.');
-            window.location.href = '/login'; 
-        </script>`);
+        res.send(`<script>alert('Login failed! ${error.message}'); window.location.href = '/login';</script>`);
     }
 });
 
-// Define the /my-account route
-app.get('/my-account', (req, res) => {
-    res.render('my-account'); 
- 
-})
 
-// Forgot Password Route
+
+// Forgot Password
 app.get('/forgot-password', (req, res) => {
     res.render('forgot-password', { message: "" });
 });
 
 app.post('/forgot-password', async (req, res) => {
     const { email } = req.body;
-
     try {
-        // Send password reset email
         await sendPasswordResetEmail(auth, email);
         res.render('forgot-password', { message: "Password reset email sent! Please check your inbox." });
     } catch (error) {
@@ -119,10 +105,9 @@ app.post('/forgot-password', async (req, res) => {
     }
 });
 
-
-// Admin Dashboard Route
+// Admin Dashboard
 app.get("/dashboard", async (req, res) => {
-    if (req.user && req.user.email === process.env.ADMIN_EMAIL) {
+    if (req.user && req.user.email === adminEmail) {
         const bookRef = ref(database, "Books");
         try {
             const snapshot = await get(bookRef);
@@ -130,47 +115,70 @@ app.get("/dashboard", async (req, res) => {
             res.render("dashboard", { books: books, error: null });
         } catch (error) {
             console.error("Dashboard fetch error:", error.message);
-            res.render("dashboard", {
-                books: [],
-                error: "Failed to store book data. Please try again.",
-            });
+            res.render("dashboard", { books: [], error: "Failed to load book data." });
         }
     } else {
-        res.send('<script>alert("Only Admin has access"); window.location.href = "/data";</script>');
+        res.send('<script>alert("Unauthorized Access"); window.location.href = "/data";</script>');
     }
 });
 
-// Member Dashboard Route
+// Member Dashboard
 app.get("/data", async (req, res) => {
     if (req.user) {
-    const bookRef = ref(database, "Books");
-    try {
-        const snapshot = await get(bookRef);
-        const books = snapshot.exists() ? Object.values(snapshot.val()) : [];
-        res.render("data", { books: books, error: null });
-    } catch (error) {
-        console.error("Data fetch error:", error.message);
-        res.render("data", { books: [], error: "Failed to load book data. Please try again." });
+        const bookRef = ref(database, "Books");
+        try {
+            const snapshot = await get(bookRef);
+            const books = snapshot.exists() ? Object.values(snapshot.val()) : [];
+            res.render("data", { books: books, error: null });
+        } catch (error) {
+            console.error("Data fetch error:", error.message);
+            res.render("data", { books: [], error: "Failed to load book data." });
+        }
+    } else {
+        res.send('<script>alert("You must log in."); window.location.href = "/login";</script>');
     }
-} else {
-    res.send('<script>alert("You must log in to access this page."); window.location.href = "/login";</script>');
-}
 });
 
-// Logout Route
+// Logout
 app.get('/logout', (req, res) => {
     signOut(auth).then(() => {
-        res.redirect('/login');  
+        res.redirect('/login');
     }).catch((error) => {
         console.error("Logout error:", error.message);
-        res.redirect('/data');  
+        res.redirect('/data');
     });
 });
 
+// Profile route
+app.get('/profile', (req, res) => {
+    if (req.user) {
+      const userRef = ref(database, 'users/' + req.user.uid);
+      get(userRef)
+        .then((snapshot) => {
+          const userData = snapshot.val();
+          if (userData) {
+            res.render('profile', { user: userData });
+          } else {
+            // Handle case where user data is not found in database
+            res.render('profile', {
+              user: { email: req.user.email, name: 'User', username: 'User' },
+              error: "Profile data not found"
+            });
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching profile:", error);
+          res.render('profile', {
+            user: { email: req.user.email, name: 'User', username: 'User' },
+            error: "Error fetching profile data"
+          });
+        });
+    } else {
+      res.redirect('/login');
+    }
+  });
 
-const port = 7000;
+const port = process.env.PORT || 7000;
 app.listen(port, () => {
     console.log(`Server running on Port: ${port}`);
 });
-
-
