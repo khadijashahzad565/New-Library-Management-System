@@ -178,7 +178,34 @@ app.get('/profile', (req, res) => {
     }
   });
 
-const port = process.env.PORT || 7000;
+  
+  app.get('/catalog', (req, res) => {
+    res.render('catalog');
+});
+
+app.get('/detail', (req, res) => {
+    res.render('detail');
+});
+// // Book Detail route with dynamic fetching
+// app.get('/book/:id', async (req, res) => {
+//     const bookId = req.params.id;
+//     const bookRef = ref(database, 'Books/' + bookId);
+    
+//     try {
+//         const snapshot = await get(bookRef);
+//         if (snapshot.exists()) {
+//             const bookData = snapshot.val();
+//             res.render('detail', bookData);  
+//         } else {
+//             res.render('detail', { error: "Book not found." });
+//         }
+//     } catch (error) {
+//         console.error("Error fetching book details:", error);
+//         res.render('detail', { error: "Failed to load book details." });
+//     }
+// });
+
+const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`Server running on Port: ${port}`);
 });
