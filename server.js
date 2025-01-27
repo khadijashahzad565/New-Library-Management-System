@@ -2,7 +2,7 @@ const express = require("express");
 const path = require("path");
 const { initializeApp } = require("firebase/app");
 const { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendEmailVerification, sendPasswordResetEmail } = require("firebase/auth");
-const { getDatabase, ref, get, update } = require("firebase/database");
+const { getDatabase, ref, get, set } = require("firebase/database");
 require("dotenv").config();
 const app = express();
 
@@ -179,31 +179,129 @@ app.get('/profile', (req, res) => {
   });
 
   
-  app.get('/catalog', (req, res) => {
-    res.render('catalog');
+  /// Catalog Route
+app.get("/catalog", (req, res) => {
+    const searchQuery = req.query.search || ""; 
+
+   
+    const filteredBooks = books.filter(book => {
+        const searchQueryLower = searchQuery.toLowerCase(); 
+        
+        return (
+            book.title.toLowerCase().includes(searchQueryLower) ||
+            book.author.toLowerCase().includes(searchQueryLower) ||
+            (book.ISBN && book.ISBN.toString().toLowerCase().includes(searchQueryLower)) 
+        );
+    });
+    
+    res.render("catalog", { books: filteredBooks, searchQuery }); 
 });
 
-app.get('/detail', (req, res) => {
-    res.render('detail');
+
+
+// Book Detail Route
+app.get('/book/:id', (req, res) => {
+    const bookId = req.params.id;
+    const book = books.find(b => b.id === bookId);
+
+    if (book) {
+        res.render('detail', { book });
+    } else {
+        res.status(404).send('Book not found');
+    }
 });
-// // Book Detail route with dynamic fetching
-// app.get('/book/:id', async (req, res) => {
-//     const bookId = req.params.id;
-//     const bookRef = ref(database, 'Books/' + bookId);
-    
-//     try {
-//         const snapshot = await get(bookRef);
-//         if (snapshot.exists()) {
-//             const bookData = snapshot.val();
-//             res.render('detail', bookData);  
-//         } else {
-//             res.render('detail', { error: "Book not found." });
-//         }
-//     } catch (error) {
-//         console.error("Error fetching book details:", error);
-//         res.render('detail', { error: "Failed to load book details." });
-//     }
-// });
+
+//  books data 
+const books = [
+    {
+        id: "1",
+        title: "Atomic Habits",
+        author: "James Clear",
+        cover: "https://images.squarespace-cdn.com/content/v1/638e80647a559f75a7adf183/9ff404ad-43bf-4557-8020-da9a0fd3c86e/645EFF54-A51F-4FF6-9E55-5CF39074CA4F.jpeg",
+        description: "A practical guide to building good habits and breaking bad ones.",
+        publisher: "Penguin Random House",
+        price: 11.99,
+        genre: "Self-Help",
+        ISBN: "87456",
+    },
+    {
+        id: "2",
+        title: "Sapiens",
+        author: "Yuval Noah Harari",
+        cover: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-w3-uPki72nA30-edF_RLGRLVemt73rAQmg&s",
+        description: "A brief history of humankind and our impact on the world.",
+        publisher: "Harper",
+        price: 14.99,
+        genre: "History",
+          ISBN: "36956",
+    },
+    {
+        id: "3",
+        title: "Ikigai",
+        author: "Héctor García",
+        cover: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQTrO5dL3mThe9MCr5sRw7LraJ-hdRmA3jZFg&s",
+        description: "A Japanese philosophy for finding purpose and happiness in life.",
+        publisher: "Penguin Books",
+        price: 10.99,
+        genre: "Philosophy",
+          ISBN: "36548",
+    },
+    {
+        id: "4",
+        title: "Outliers",
+        author: "Malcolm Gladwell",
+        cover: "https://amazingworkplaces.co/wp-content/uploads/2022/01/outliers-malcolm-gladwell-Book-Review-Image-amazing-workplaces.jpg",
+        description: "Explores the factors behind high achievers and their success.",
+        publisher: "Little, Brown and Company",
+        price: 12.99,
+        genre: "Psychology",
+          ISBN: "23689",
+    },
+    {
+        id: "5",
+        title: "Grit",
+        author: "Angela Duckworth",
+        cover: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjEpZ36a45WoaoodfbJmKfpekp78Jm3YDa7w&s",
+        description: "The power of passion and perseverance in achieving success.",
+        publisher: "Scribner",
+        price: 13.99,
+        genre: "Motivation",
+          ISBN: "59834",
+    },
+    {
+        id: "6",
+        title: "Drive",
+        author: "Daniel H. Pink",
+        cover: "https://amazingworkplaces.co/wp-content/uploads/2024/11/Drive_The-Surprising-Truth-About-What-Motivates-Us_Daniel-H.-Pink.jpg",
+        description: "What truly motivates us and drives human behavior.",
+        publisher: "Riverhead Books",
+        price: 14.50,
+        genre: "Self-Help",
+          ISBN: "35678",
+    },
+    {
+        id: "7",
+        title: "Quiet",
+        author: "Susan Cain",
+        cover: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-xIoPTiFtYWnmaZ0yDxbx-NFCFPReAzd1Ew&s",
+        description: "The power of introverts in a world that values extroversion.",
+        publisher: "Crown Publishing Group",
+        price: 15.99,
+        genre: "Psychology",
+          ISBN: "25945",
+    },
+    {
+        id: "8",
+        title: "Peak",
+        author: "Anders Ericsson",
+        cover: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS6T8lnz27U5KKuHTebO93_iiUUI7-jbgJLSQ&s",
+        description: "Unveils the secrets of mastery and expert performance.",
+        publisher: "Houghton Mifflin Harcourt",
+        price: 14.99,
+        genre: "Self-Help",
+          ISBN: "24587",
+    },
+];
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
